@@ -1,0 +1,52 @@
+import Link from "next/link";
+
+interface ProductCardProps {
+  product: {
+    _id: string;
+    title: string;
+    slug: string;
+    price: number;
+    discountPrice?: number;
+    images: string[];
+    category?: { name: string } | null;
+  };
+}
+
+export function ProductCard({ product }: ProductCardProps) {
+  const hasDiscount = Boolean(
+    product.discountPrice && product.discountPrice < product.price
+  );
+
+  return (
+    <Link href={`/product/${product.slug}`} className="group block">
+      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3">
+        {product.images?.[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.images[0]}
+            alt={product.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">
+            No image
+          </div>
+        )}
+      </div>
+      <h3 className="text-sm font-medium line-clamp-2">{product.title}</h3>
+      {product.category?.name && (
+        <p className="text-xs text-gray-400">{product.category.name}</p>
+      )}
+      <div className="mt-1 flex items-center gap-2">
+        {hasDiscount ? (
+          <>
+            <span className="font-semibold">₹{product.discountPrice}</span>
+            <span className="text-sm text-gray-400 line-through">₹{product.price}</span>
+          </>
+        ) : (
+          <span className="font-semibold">₹{product.price}</span>
+        )}
+      </div>
+    </Link>
+  );
+}
