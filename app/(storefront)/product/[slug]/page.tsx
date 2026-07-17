@@ -3,15 +3,17 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/models";
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { InferSchemaType } from "mongoose";
 
 export const dynamic = "force-dynamic";
+type ProductType = InferSchemaType<typeof Product>;
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   await connectDB();
 
   const product = await Product.findOne({ slug: params.slug, isActive: true })
     .populate("category", "name slug")
-    .lean();
+    .lean<ProductType>();
 
   if (!product) notFound();
 
