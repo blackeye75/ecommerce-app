@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getServerUser } from "@/lib/middleware/getServerUser";
+import { CartLink } from "./CartLink";
+import { LogoutButton } from "./LogoutButton";
 
 export async function Header() {
   const user = await getServerUser();
@@ -14,10 +16,14 @@ export async function Header() {
           <Link href="/shop" className="hover:underline">
             Shop
           </Link>
+          <CartLink />
           {user ? (
-            <Link href={user.role === "admin" ? "/admin" : "/account"} className="hover:underline">
-              {user.role === "admin" ? "Admin" : "My Account"}
-            </Link>
+            <>
+              <Link href={user.role === "admin" ? "/admin" : "/account"} className="hover:underline">
+                {user.role === "admin" ? "Admin" : "My Account"}
+              </Link>
+              <LogoutButton />
+            </>
           ) : (
             <Link href="/login" className="hover:underline">
               Login

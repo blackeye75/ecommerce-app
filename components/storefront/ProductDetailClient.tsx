@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/store/useCartStore";
 
 interface VariantAttribute {
   name: string;
@@ -18,6 +20,7 @@ interface VariantCombination {
 interface Product {
   _id: string;
   title: string;
+  slug: string;
   description: string;
   images: string[];
   price: number;
@@ -29,11 +32,11 @@ interface Product {
 }
 
 export function ProductDetailClient({ product }: { product: Product }) {
+  const router = useRouter();
+  const addItem = useCartStore((s) => s.addItem);
   const hasVariants = product.variants.length > 0;
 
   const [selected, setSelected] = useState<Record<string, string>>(() => {
-    // Default to the first option of every attribute so a valid combination
-    // is always selected as soon as the page loads.
     const initial: Record<string, string> = {};
     product.variants.forEach((v) => {
       initial[v.name] = v.options[0];
@@ -42,6 +45,8 @@ export function ProductDetailClient({ product }: { product: Product }) {
   });
 
   const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
 
   const matchedCombination = useMemo(() => {
     if (!hasVariants) return null;
@@ -60,6 +65,24 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const images = matchedCombination?.image
     ? [matchedCombination.image, ...product.images]
     : product.images;
+
+  function handleAddToCart() {
+    if (hasVariants && !matchedCombination) return;
+
+    addItem({
+      productId: product._id,
+      title: product.title,
+      slug: product.slug,
+      price: displayPrice,
+      image: product.images?.[0],
+      quantity,
+      variant: hasVariants ? selected : undefined,
+      maxStock: stock,
+    });
+
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  }
 
   return (
     <div className="grid md:grid-cols-2 gap-10">
@@ -135,16 +158,45 @@ export function ProductDetailClient({ product }: { product: Product }) {
           {outOfStock ? "Out of stock" : `${stock} in stock`}
         </p>
 
+        {!outOfStock && (
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-sm font-medium">Qty</label>
+            <div className="flex items-center border rounded-md">
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                className="px-3 py-1 text-lg"
+              >
+                −
+              </button>
+              <span className="px-4">{quantity}</span>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
+                className="px-3 py-1 text-lg"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           disabled={outOfStock}
-          title="Cart & checkout arrive in Phase 5"
+          onClick={handleAddToCart}
           className="w-full rounded-md bg-primary text-primary-foreground py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Add to Cart
+          {added ? "Added ✓" : "Add to Cart"}
         </button>
-        <p className="text-xs text-gray-400 mt-2 text-center">
-          Cart & checkout are coming in Phase 5
-        </p>
+
+        {added && (
+          <button
+            onClick={() => router.push("/cart")}
+            className="w-full mt-2 rounded-md border py-2 text-sm font-medium"
+          >
+            View Cart
+          </button>
+        )}
 
         <div className="mt-8 border-t pt-6">
           <h2 className="font-medium mb-2">Description</h2>

@@ -4,6 +4,24 @@ import { verifyAccessToken, ACCESS_TOKEN_COOKIE } from "@/lib/auth";
 
 const ADMIN_PREFIX = "/admin";
 const ACCOUNT_PREFIX = "/account";
+const CHECKOUT_PREFIX = "/checkout";
+const GUEST_ONLY_ROUTES = ["/login", "/register"];
+
+async function resolveRole(req: NextRequest): Promise<string | undefined> {
+  // 1. Check NextAuth (Google OAuth) session — getToken is edge-compatible.
+  const nextAuthToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  let role = nextAuthToken?.role as string | undefined;
+
+  // 2. Fall back to the custom JWT cookie (email/password users).
+  if (!role) {
+    const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+    if (accessToken) {
+      const payload = await verifyAccessToken(accessToken);
+      role = payload?.role;
+    }
+  }
+  return role;
+}
 
 /**
  * Runs on the Edge before the matched routes render. This is the FIRST layer
@@ -16,22 +34,22 @@ export async function middleware(req: NextRequest) {
 
   const isAdminRoute = pathname.startsWith(ADMIN_PREFIX);
   const isAccountRoute = pathname.startsWith(ACCOUNT_PREFIX);
+  const isCheckoutRoute = pathname.startsWith(CHECKOUT_PREFIX);
+  const isGuestOnlyRoute = GUEST_ONLY_ROUTES.includes(pathname);
 
-  if (!isAdminRoute && !isAccountRoute) {
+  if (!isAdminRoute && !isAccountRoute && !isCheckoutRoute && !isGuestOnlyRoute) {
     return NextResponse.next();
   }
 
-  // 1. Check NextAuth (Google OAuth) session — getToken is edge-compatible.
-  const nextAuthToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  let role = nextAuthToken?.role as string | undefined;
+  const role = await resolveRole(req);
 
-  // 2. Fall back to the custom JWT cookie (email/password users).
-  if (!role) {
-    const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
-    if (accessToken) {
-      const payload = await verifyAccessToken(accessToken);
-      role = payload?.role;
+  // Already logged in (customer or admin) and trying to visit /login or
+  // /register — send them home instead of showing the form again.
+  if (isGuestOnlyRoute) {
+    if (role) {
+      return NextResponse.redirect(new URL("/", req.url));
     }
+    return NextResponse.next();
   }
 
   if (!role) {
@@ -48,5 +66,11 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/account/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/account/:path*",
+    "/checkout/:path*",
+    "/login",
+    "/register",
+  ],
 };

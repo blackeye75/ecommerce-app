@@ -17,10 +17,9 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { User, Category, Product } from "../models";
+import { User, Category, Product, Coupon } from "../models";
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
-console.log(MONGODB_URI)
 
 if (!MONGODB_URI) {
   console.error("MONGODB_URI is not set. Add it to .env.local before seeding.");
@@ -58,6 +57,7 @@ async function seed() {
   await Product.deleteMany({});
   await Category.deleteMany({});
   await User.deleteMany({ role: "admin" });
+  await Coupon.deleteMany({});
 
   // --- Admin user ---
   console.log("Creating admin user...");
@@ -183,7 +183,20 @@ async function seed() {
 
   await Product.insertMany(products);
 
-  console.log(`Seed complete: ${categories.length} categories, ${products.length} products, 1 admin.`);
+  console.log("Creating sample coupon...");
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 90);
+  await Coupon.create({
+    code: "WELCOME10",
+    discountType: "percent",
+    value: 10,
+    minOrderValue: 500,
+    expiresAt,
+    usageLimit: 0, // unlimited
+    isActive: true,
+  });
+
+  console.log(`Seed complete: ${categories.length} categories, ${products.length} products, 1 admin, 1 coupon (WELCOME10).`);
   console.log("---");
   console.log("Admin login: admin@example.com / ChangeMe123!");
   console.log("---");
