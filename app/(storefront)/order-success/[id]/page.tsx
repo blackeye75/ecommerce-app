@@ -3,13 +3,14 @@ import Link from "next/link";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models";
 import { getServerUser } from "@/lib/middleware/getServerUser";
+import { IOrder } from "@/models/Order";
 
 export default async function OrderSuccessPage({ params }: { params: { id: string } }) {
   const user = await getServerUser();
   if (!user) redirect("/login");
 
   await connectDB();
-  const order = await Order.findById(params.id).lean();
+  const order = await Order.findById(params.id).lean<IOrder>();
 
   if (!order) notFound();
   const isOwner = (order as { user: unknown }).user?.toString() === user.id;
