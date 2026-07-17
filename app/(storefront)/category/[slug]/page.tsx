@@ -2,11 +2,14 @@ import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { Product, Category } from "@/models";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { InferSchemaType } from "mongoose";
 
 interface CategoryPageProps {
   params: { slug: string };
   searchParams: { page?: string };
 }
+
+type CategoryType = InferSchemaType<typeof Category>;
 
 const PAGE_SIZE = 12;
 
@@ -15,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   await connectDB();
 
-  const category = await Category.findOne({ slug: params.slug, isActive: true }).lean();
+  const category = await Category.findOne({ slug: params.slug, isActive: true }).lean<CategoryType>();
   if (!category) notFound();
 
   const categoryId = (category as { _id: unknown })._id;
