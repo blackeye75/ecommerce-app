@@ -19,6 +19,27 @@ interface Address {
   isDefault: boolean;
 }
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (document.getElementById("razorpay-checkout-js")) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "razorpay-checkout-js";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
@@ -29,6 +50,7 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressLoading, setAddressLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "razorpay">("cod");
 
   const [couponInput, setCouponInput] = useState("");
   const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -108,35 +130,131 @@ export default function CheckoutPage() {
       setOrderError("Please select a shipping address");
       return;
     }
+
+    const checkoutItems = items.map((i) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      variant: i.variant,
+    }));
+
+    if (paymentMethod === "cod") {
+      setPlacing(true);
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: checkoutItems,
+            addressId: selectedAddressId,
+            paymentMethod: "cod",
+            couponCode: couponCode ?? undefined,
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setOrderError(data.error || "Failed to place order");
+          setPlacing(false);
+          return;
+        }
+
+        clearCart();
+        router.push(`/order-success/${data.order._id}`);
+      } catch {
+        setOrderError("Something went wrong. Please try again.");
+        setPlacing(false);
+      }
+      return;
+    }
+
+    // Razorpay flow
     setPlacing(true);
-
     try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map((i) => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            variant: i.variant,
-          })),
-          addressId: selectedAddressId,
-          paymentMethod: "cod",
-          couponCode: couponCode ?? undefined,
-        }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setOrderError(data.error || "Failed to place order");
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        setOrderError("Failed to load the payment gateway. Please check your connection.");
+        setPlacing(false);
         return;
       }
 
-      clearCart();
-      router.push(`/order-success/${data.order._id}`);
+      const createRes = await fetch("/api/payments/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: checkoutItems,
+          addressId: selectedAddressId,
+          couponCode: couponCode ?? undefined,
+        }),
+      });
+      const createData = await createRes.json();
+
+      if (!createRes.ok) {
+        setOrderError(createData.error || "Failed to start payment");
+        setPlacing(false);
+        return;
+      }
+      console.log(createData)
+
+      const options = {
+        key: createData.keyId,
+        amount: createData.amount,
+        currency: createData.currency,
+        name: "Store",
+        description: "Order Payment",
+        order_id: createData.razorpayOrderId,
+        prefill: createData.prefill,
+        theme: { color: "#111827" },
+        handler: async function (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) {
+          try {
+            const verifyRes = await fetch("/api/payments/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: createData.orderId,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+
+            if (!verifyRes.ok) {
+              setOrderError(
+                verifyData.error ||
+                  "Payment verification failed. If money was deducted, please contact support."
+              );
+              setPlacing(false);
+              return;
+            }
+
+            clearCart();
+            router.push(`/order-success/${createData.orderId}`);
+          } catch {
+            setOrderError(
+              "Payment verification failed. If money was deducted, please contact support."
+            );
+            setPlacing(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setPlacing(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function () {
+        setOrderError("Payment failed. Please try again.");
+        setPlacing(false);
+      });
+      rzp.open();
     } catch {
       setOrderError("Something went wrong. Please try again.");
-    } finally {
       setPlacing(false);
     }
   }
@@ -211,13 +329,31 @@ export default function CheckoutPage() {
         <section>
           <h2 className="font-bold text-lg mb-3">Payment Method</h2>
           <div className="space-y-2 text-sm">
-            <label className="flex items-center gap-2 border rounded-md p-3 border-primary">
-              <input type="radio" name="payment" checked readOnly />
+            <label
+              className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
+                paymentMethod === "cod" ? "border-primary" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="payment"
+                checked={paymentMethod === "cod"}
+                onChange={() => setPaymentMethod("cod")}
+              />
               Cash on Delivery
             </label>
-            <label className="flex items-center gap-2 border rounded-md p-3 text-gray-400">
-              <input type="radio" name="payment" disabled />
-              Pay Online (Razorpay) — coming soon
+            <label
+              className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
+                paymentMethod === "razorpay" ? "border-primary" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="payment"
+                checked={paymentMethod === "razorpay"}
+                onChange={() => setPaymentMethod("razorpay")}
+              />
+              Pay Online (Card / UPI / Netbanking via Razorpay)
             </label>
           </div>
         </section>
@@ -298,7 +434,13 @@ export default function CheckoutPage() {
           disabled={placing || addressLoading}
           className="w-full rounded-md bg-primary text-primary-foreground py-3 font-medium disabled:opacity-50"
         >
-          {placing ? "Placing order..." : "Place Order"}
+          {placing
+            ? paymentMethod === "razorpay"
+              ? "Opening payment..."
+              : "Placing order..."
+            : paymentMethod === "razorpay"
+              ? "Proceed to Pay"
+              : "Place Order"}
         </button>
       </div>
     </main>
