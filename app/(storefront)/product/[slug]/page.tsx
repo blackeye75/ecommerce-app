@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/models";
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { IProduct } from "@/models/Product";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   const product = await Product.findOne({ slug: params.slug, isActive: true })
     .populate("category", "name slug")
-    .lean();
+    .lean<IProduct>();
 
   if (!product) notFound();
 
