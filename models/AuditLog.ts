@@ -12,7 +12,8 @@ export type AuditAction =
   | "COUPON_CREATE"
   | "COUPON_UPDATE"
   | "COUPON_DELETE"
-  | "REVIEW_MODERATE";
+  | "REVIEW_MODERATE"
+  | "SETTINGS_UPDATE";
 
 export interface IAuditLog {
   _id: string;
