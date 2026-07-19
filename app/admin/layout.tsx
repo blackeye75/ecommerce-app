@@ -17,13 +17,34 @@ export default async function AdminLayout({
       <aside className="w-64 border-r p-6 flex flex-col justify-between">
         <div>
           <h2 className="font-bold text-lg mb-6">Admin Panel</h2>
-          <nav className="space-y-2 text-sm">
-            <a href="/admin" className="block hover:underline">Dashboard</a>
-            <a href="/admin/products" className="block hover:underline">Products</a>
-            <a href="/admin/categories" className="block hover:underline">Categories</a>
-            <a href="/admin/orders" className="block hover:underline">Orders</a>
-            <a href="/admin/activity-log" className="block hover:underline">Activity Log</a>
-            <a href="/admin/settings" className="block hover:underline">Settings</a>
+          <nav className="space-y-0.5 text-sm">
+            <a
+              href="/admin"
+              className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl"
+            >
+              Dashboard
+            </a>
+            <a href="/admin/products" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Products
+            </a>
+            <a href="/admin/categories" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Categories
+            </a>
+            <a href="/admin/orders" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Orders
+            </a>
+            <a href="/admin/analytics" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Analytics
+            </a>
+            <a href="/admin/reviews" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Reviews
+            </a>
+            <a href="/admin/activity-log" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Activity Log
+            </a>
+            <a href="/admin/settings" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Settings
+            </a>
           </nav>
         </div>
         {/* <LogoutButton className="text-sm text-left hover:underline text-red-500" /> */}

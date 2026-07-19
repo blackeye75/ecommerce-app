@@ -3,9 +3,23 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/models";
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { ProductReviews } from "@/components/storefront/ProductReviews";
 import { IProduct } from "@/models/Product";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  await connectDB();
+  const p = await Product.findOne({ slug: params.slug, isActive: true })
+    .select("title description images").lean<{ title: string; description: string; images: string[] }>();
+  if (!p) return { title: "Product not found" };
+  return {
+    title: p.title,
+    description: p.description?.slice(0, 160),
+    openGraph: { title: p.title, images: p.images?.[0] ? [p.images[0]] : [] },
+  };
+}
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   await connectDB();
@@ -32,7 +46,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
       <ProductDetailClient product={JSON.parse(JSON.stringify(product))} />
-
+      <ProductReviews productId={String((product as { _id: unknown })._id)} />
       {related.length > 0 && (
         <section className="mt-16">
           <h2 className="text-xl font-bold mb-6">You might also like</h2>

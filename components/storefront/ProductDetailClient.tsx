@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
+import { WishlistButton } from "./WishlistButton";
 
 interface VariantAttribute {
   name: string;
@@ -184,11 +185,11 @@ export function ProductDetailClient({ product }: { product: Product }) {
         <button
           disabled={outOfStock}
           onClick={handleAddToCart}
-          className="w-full rounded-md bg-primary text-primary-foreground py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-md mb-4 bg-primary text-primary-foreground py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {added ? "Added ✓" : "Add to Cart"}
         </button>
-
+        <WishlistButton productId={product._id} variant="inline" />
         {added && (
           <button
             onClick={() => router.push("/cart")}

@@ -24,6 +24,7 @@ export default async function AccountPage() {
         <Link href="/cart" className="text-primary underline">
           View Cart
         </Link>
+        <Link href="/account/wishlist" className="text-primary underline">Wishlist</Link>
       </div>
     </main>
   );

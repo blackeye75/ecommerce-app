@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WishlistButton } from "./WishlistButton";
 
 interface ProductCardProps {
   product: {
@@ -21,7 +22,8 @@ export function ProductCard({ product, currency = "₹" }: ProductCardProps) {
 
   return (
     <Link href={`/product/${product.slug}`} className="group block">
-      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3">
+      <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3">
+        <WishlistButton productId={product._id} className="absolute top-2 right-2 z-10" />
         {product.images?.[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
