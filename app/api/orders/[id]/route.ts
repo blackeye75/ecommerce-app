@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/middleware/requireAdmin";
 import { logAdminAction, getClientIp } from "@/lib/middleware/logAdminAction";
 import { sendEmail } from "@/lib/email";
 import { orderStatusUpdateEmail } from "@/lib/emailTemplates";
+import { IOrder } from "@/models/Order";
 
 const VALID_ORDER_STATUSES = ["placed", "processing", "shipped", "delivered", "cancelled"];
 const VALID_PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
@@ -20,7 +21,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const order = await Order.findById(params.id).lean();
+    const order = await Order.findById(params.id).lean<IOrder>();
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
