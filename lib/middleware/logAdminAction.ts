@@ -5,7 +5,7 @@ import type { AuditAction } from "@/models/AuditLog";
 interface LogAdminActionParams {
   adminId: string;
   action: AuditAction;
-  targetType?: "Product" | "Order" | "Category" | "Coupon" | "Review" | "User";
+  targetType?: "Product" | "Order" | "Category" | "Coupon" | "Review" | "User" | "Settings";
   targetId?: string;
   changes?: Record<string, unknown>; // e.g. { before: {...}, after: {...} }
   ipAddress?: string;
