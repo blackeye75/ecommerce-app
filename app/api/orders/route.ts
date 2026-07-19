@@ -211,8 +211,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fire-and-forget — an email failure should never fail order placement.
-    sendEmail({
+    // Awaited so the send completes before this serverless function returns —
+    // an un-awaited send can be dropped when the lambda freezes. sendEmail
+    // catches its own errors, so a mail failure still never fails the order.
+    await sendEmail({
       to: user.email,
       subject: `Order Confirmed — #${order._id.toString().slice(-8)}`,
       html: orderConfirmationEmail(order),

@@ -1,5 +1,7 @@
 import { connectDB } from "@/lib/db";
-import { Order, Product, Coupon } from "@/models";
+import { Order, Product, Coupon, User } from "@/models";
+import { sendEmail } from "@/lib/email";
+import { orderConfirmationEmail } from "@/lib/emailTemplates";
 
 /**
  * Applies the side effects of a CONFIRMED Razorpay payment: decrements stock,
@@ -50,6 +52,27 @@ export async function confirmRazorpayPayment(orderId: string, razorpayPaymentId:
   order.paymentStatus = "paid";
   order.razorpayPaymentId = razorpayPaymentId;
   await order.save();
+
+  // Send the order-confirmation email exactly once, on the real transition to
+  // "paid". This lives here (rather than in the verify route) so it ALSO fires
+  // when only the webhook confirms the payment — e.g. the shopper closed the
+  // tab right after paying. The early "already paid" return above guarantees
+  // the second of the two paths (verify + webhook) won't send a duplicate.
+  // Awaited so it completes before the serverless function returns (an
+  // un-awaited send can be dropped when the lambda freezes); sendEmail catches
+  // its own errors, so this never blocks or breaks payment confirmation.
+  try {
+    const customer = await User.findById(order.user);
+    if (customer?.email) {
+      await sendEmail({
+        to: customer.email,
+        subject: `Order Confirmed — #${order._id.toString().slice(-8)}`,
+        html: orderConfirmationEmail(order as any),
+      });
+    }
+  } catch (err) {
+    console.error("[confirmRazorpayPayment] confirmation email failed:", err);
+  }
 
   return { ok: true as const, order };
 }
