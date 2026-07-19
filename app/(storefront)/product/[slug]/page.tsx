@@ -3,25 +3,15 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/models";
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";
 import { ProductCard } from "@/components/storefront/ProductCard";
-import mongoose, { InferSchemaType } from "mongoose";
-import { IProduct } from "@/models/Product";
 
 export const dynamic = "force-dynamic";
-export interface IProductPopulated
-  extends Omit<IProduct, "category"> {
-  category: {
-    _id: mongoose.Types.ObjectId;
-    name: string;
-    slug: string;
-  };
-}
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   await connectDB();
 
   const product = await Product.findOne({ slug: params.slug, isActive: true })
     .populate("category", "name slug")
-    .lean<IProductPopulated>();
+    .lean();
 
   if (!product) notFound();
 

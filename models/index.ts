@@ -6,3 +6,4 @@ export { default as Order } from "./Order";
 export { default as Review } from "./Review";
 export { default as Coupon } from "./Coupon";
 export { default as AuditLog } from "./AuditLog";
+export { default as SiteSettings } from "./SiteSettings";

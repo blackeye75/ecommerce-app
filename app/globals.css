@@ -5,6 +5,11 @@
 :root {
   --background: #ffffff;
   --foreground: #111827;
+  /* Defaults; overridden at runtime by the theme injected in app/layout.tsx
+     from the admin Site Settings. Kept here so the site renders correctly
+     even before settings load. */
+  --primary: #111827;
+  --primary-foreground: #ffffff;
 }
 
 body {

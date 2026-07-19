@@ -157,3 +157,19 @@ Once checkout works end-to-end with COD, say **"Phase 5 confirmed, start Phase 6
 
 ## Next step
 Once Razorpay payments work end-to-end, say **"Phase 6 confirmed, start Phase 7"** and we'll build: customer order history/tracking pages, the admin order management screen (update order status), and email notifications.
+
+## Phase 7: Order History, Admin Order Management, Email Notifications
+
+**Test checklist:**
+- `/account/orders` → shows your order history, click one → `/account/orders/[id]` shows a visual status tracker (Placed → Processing → Shipped → Delivered)
+- Admin → **Orders** (`/admin/orders`) → see every order across all customers, filter by status, change `orderStatus` or `paymentStatus` right from the dropdowns inline
+- Change an order's status as admin → check the customer's inbox (or your terminal log, if email isn't configured yet) for a status-update email
+- Place a new order (COD or Razorpay) → check for an order confirmation email
+- Check Atlas `auditlogs` → should show an `ORDER_STATUS_UPDATE` entry whenever you change a status as admin
+
+**Email setup (optional for local dev):** if you don't set `EMAIL_SERVER_HOST` etc. in `.env.local`, emails are just logged to the terminal instead of failing — order placement and status updates work either way. To actually receive emails locally:
+- **Easiest for testing:** [Mailtrap](https://mailtrap.io) (free sandbox inbox, nothing is really sent to real addresses) — copy their SMTP host/port/user/password into `.env.local`
+- **For real delivery:** Gmail with an [App Password](https://myaccount.google.com/apppasswords) (`EMAIL_SERVER_HOST=smtp.gmail.com`, `EMAIL_SERVER_PORT=587`, `EMAIL_SERVER_USER=you@gmail.com`, `EMAIL_SERVER_PASSWORD=<app password>`)
+
+## Next step
+Once order tracking and admin management check out, say **"Phase 7 confirmed, start Phase 8"** and we'll build: product reviews, wishlist, admin dashboard analytics, SEO metadata, and general polish/responsive QA.

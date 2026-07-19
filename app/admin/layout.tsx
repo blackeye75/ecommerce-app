@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/middleware/getServerUser";
-import { LogoutButton } from "@/components/storefront/LogoutButton";
+// import { LogoutButton } from "@/components/storefront/LogoutButton";
 
 export default async function AdminLayout({
   children,
@@ -23,9 +23,10 @@ export default async function AdminLayout({
             <a href="/admin/categories" className="block hover:underline">Categories</a>
             <a href="/admin/orders" className="block hover:underline">Orders</a>
             <a href="/admin/activity-log" className="block hover:underline">Activity Log</a>
+            <a href="/admin/settings" className="block hover:underline">Settings</a>
           </nav>
         </div>
-        <LogoutButton className="text-sm text-left hover:underline text-red-500" />
+        {/* <LogoutButton className="text-sm text-left hover:underline text-red-500" /> */}
       </aside>
       <main className="flex-1 p-8">{children}</main>
     </div>

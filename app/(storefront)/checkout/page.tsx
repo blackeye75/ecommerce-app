@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import { AddressForm } from "@/components/storefront/AddressForm";
-import { SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
 
 interface Address {
   _id: string;
@@ -52,6 +51,16 @@ export default function CheckoutPage() {
   const [addressLoading, setAddressLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "razorpay">("cod");
 
+  // Commerce config from Site Settings (shipping, currency, which payment
+  // methods are enabled). Falls back to sensible defaults until it loads.
+  const [commerce, setCommerce] = useState({
+    currencySymbol: "₹",
+    shippingFee: 49,
+    freeShippingThreshold: 999,
+    codEnabled: true,
+    razorpayEnabled: true,
+  });
+
   const [couponInput, setCouponInput] = useState("");
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [discount, setDiscount] = useState(0);
@@ -81,13 +90,28 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     loadAddresses();
+    // Load commerce settings so shipping, currency, and payment options match admin config.
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.settings?.commerce) {
+          const c = d.settings.commerce;
+          setCommerce(c);
+          // If COD is disabled, default the selection to Razorpay (and vice-versa).
+          if (!c.codEnabled && c.razorpayEnabled) setPaymentMethod("razorpay");
+          if (c.codEnabled && !c.razorpayEnabled) setPaymentMethod("cod");
+        }
+      })
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!mounted) return null;
 
+  const cur = commerce.currencySymbol;
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shippingFee = subtotal - discount >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const shippingFee =
+    subtotal - discount >= commerce.freeShippingThreshold ? 0 : commerce.shippingFee;
   const total = Math.max(0, subtotal - discount + shippingFee);
 
   async function handleApplyCoupon() {
@@ -193,7 +217,6 @@ export default function CheckoutPage() {
         setPlacing(false);
         return;
       }
-      console.log(createData)
 
       const options = {
         key: createData.keyId,
@@ -329,32 +352,39 @@ export default function CheckoutPage() {
         <section>
           <h2 className="font-bold text-lg mb-3">Payment Method</h2>
           <div className="space-y-2 text-sm">
-            <label
-              className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
-                paymentMethod === "cod" ? "border-primary" : ""
-              }`}
-            >
-              <input
-                type="radio"
-                name="payment"
-                checked={paymentMethod === "cod"}
-                onChange={() => setPaymentMethod("cod")}
-              />
-              Cash on Delivery
-            </label>
-            <label
-              className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
-                paymentMethod === "razorpay" ? "border-primary" : ""
-              }`}
-            >
-              <input
-                type="radio"
-                name="payment"
-                checked={paymentMethod === "razorpay"}
-                onChange={() => setPaymentMethod("razorpay")}
-              />
-              Pay Online (Card / UPI / Netbanking via Razorpay)
-            </label>
+            {commerce.codEnabled && (
+              <label
+                className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
+                  paymentMethod === "cod" ? "border-primary" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === "cod"}
+                  onChange={() => setPaymentMethod("cod")}
+                />
+                Cash on Delivery
+              </label>
+            )}
+            {commerce.razorpayEnabled && (
+              <label
+                className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
+                  paymentMethod === "razorpay" ? "border-primary" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === "razorpay"}
+                  onChange={() => setPaymentMethod("razorpay")}
+                />
+                Pay Online (Card / UPI / Netbanking via Razorpay)
+              </label>
+            )}
+            {!commerce.codEnabled && !commerce.razorpayEnabled && (
+              <p className="text-gray-400">No payment methods are currently available.</p>
+            )}
           </div>
         </section>
       </div>
@@ -371,7 +401,7 @@ export default function CheckoutPage() {
               <span className="text-gray-600">
                 {item.title} × {item.quantity}
               </span>
-              <span>₹{item.price * item.quantity}</span>
+              <span>{cur}{item.price * item.quantity}</span>
             </div>
           ))}
         </div>
@@ -409,21 +439,21 @@ export default function CheckoutPage() {
         <div className="border-t pt-4 space-y-1 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>₹{subtotal}</span>
+            <span>{cur}{subtotal}</span>
           </div>
           {discount > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Discount</span>
-              <span>−₹{discount}</span>
+              <span>−{cur}{discount}</span>
             </div>
           )}
           <div className="flex justify-between">
             <span>Shipping</span>
-            <span>{shippingFee === 0 ? "Free" : `₹${shippingFee}`}</span>
+            <span>{shippingFee === 0 ? "Free" : `${cur}${shippingFee}`}</span>
           </div>
           <div className="flex justify-between font-bold text-base pt-1 border-t mt-1">
             <span>Total</span>
-            <span>₹{total}</span>
+            <span>{cur}{total}</span>
           </div>
         </div>
 

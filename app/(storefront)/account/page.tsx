@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/middleware/getServerUser";
 
@@ -11,12 +12,19 @@ export default async function AccountPage() {
       <div className="space-y-1 text-gray-700">
         <p>Email: {user.email}</p>
         <p>Role: {user.role}</p>
-        <p>User ID: {user.id}</p>
       </div>
-      <p className="mt-6 text-sm text-gray-400">
-        If you can see this page, auth is working — this is a protected route
-        reached via middleware.ts + getServerUser().
-      </p>
+
+      <div className="mt-6 flex gap-4 text-sm">
+        <Link href="/account/orders" className="text-primary underline">
+          Order History
+        </Link>
+        <Link href="/account/addresses" className="text-primary underline">
+          Manage Addresses
+        </Link>
+        <Link href="/cart" className="text-primary underline">
+          View Cart
+        </Link>
+      </div>
     </main>
   );
 }

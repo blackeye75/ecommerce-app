@@ -10,9 +10,11 @@ interface ProductCardProps {
     images: string[];
     category?: { name: string } | null;
   };
+  /** Currency symbol from Site Settings; defaults to ₹ so existing call sites keep working. */
+  currency?: string;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, currency = "₹" }: ProductCardProps) {
   const hasDiscount = Boolean(
     product.discountPrice && product.discountPrice < product.price
   );
@@ -40,11 +42,11 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="mt-1 flex items-center gap-2">
         {hasDiscount ? (
           <>
-            <span className="font-semibold">₹{product.discountPrice}</span>
-            <span className="text-sm text-gray-400 line-through">₹{product.price}</span>
+            <span className="font-semibold">{currency}{product.discountPrice}</span>
+            <span className="text-sm text-gray-400 line-through">{currency}{product.price}</span>
           </>
         ) : (
-          <span className="font-semibold">₹{product.price}</span>
+          <span className="font-semibold">{currency}{product.price}</span>
         )}
       </div>
     </Link>

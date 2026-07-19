@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order, Product, Address, Coupon } from "@/models";
 import { requireAuth } from "@/lib/middleware/requireAuth";
-import { SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
+import { getSiteSettings } from "@/lib/site-settings";
 import razorpay from "@/lib/razorpay";
 
 interface CheckoutItemInput {
@@ -117,7 +117,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const shippingFee = subtotal - discount >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+    const { commerce } = await getSiteSettings();
+    const shippingFee =
+      subtotal - discount >= commerce.freeShippingThreshold ? 0 : commerce.shippingFee;
     const total = Math.max(0, subtotal - discount + shippingFee);
 
     const order = await Order.create({
@@ -163,8 +165,22 @@ export async function POST(req: NextRequest) {
         contact: address.phone,
       },
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Razorpay create-order error:", err);
+
+    // Razorpay's SDK throws an object shaped like { statusCode, error: { description } }
+    // on auth failures — surface that instead of a generic message so it's obvious
+    // this is a credentials problem, not a bug.
+    if (err?.statusCode === 401) {
+      return NextResponse.json(
+        {
+          error:
+            "Payment gateway authentication failed — check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env.local, and restart the dev server after editing them.",
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }

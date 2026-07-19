@@ -3,6 +3,8 @@ import { connectDB } from "@/lib/db";
 import { Order, Product, Address, Coupon } from "@/models";
 import { requireAuth } from "@/lib/middleware/requireAuth";
 import { SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
+import { sendEmail } from "@/lib/email";
+import { orderConfirmationEmail } from "@/lib/emailTemplates";
 
 interface CheckoutItemInput {
   productId: string;
@@ -20,18 +22,19 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.min(50, Number(searchParams.get("limit") ?? 20));
+    const status = searchParams.get("status");
 
     // Customers only ever see their own orders; admins can see everything.
-    const filter = user.role === "admin" ? {} : { user: user.id };
+    const filter: Record<string, unknown> = user.role === "admin" ? {} : { user: user.id };
+    if (status) filter.orderStatus = status;
 
-    const [orders, total] = await Promise.all([
-      Order.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
-      Order.countDocuments(filter),
-    ]);
+    let query = Order.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit);
+    // Admins need to see who placed each order; customers already know it's theirs.
+    if (user.role === "admin") {
+      query = query.populate("user", "name email");
+    }
+
+    const [orders, total] = await Promise.all([query.lean(), Order.countDocuments(filter)]);
 
     return NextResponse.json({
       orders,
@@ -207,6 +210,13 @@ export async function POST(req: NextRequest) {
         await Product.updateOne({ _id: productId }, { $inc: { stock: -quantity } });
       }
     }
+
+    // Fire-and-forget — an email failure should never fail order placement.
+    sendEmail({
+      to: user.email,
+      subject: `Order Confirmed — #${order._id.toString().slice(-8)}`,
+      html: orderConfirmationEmail(order),
+    });
 
     return NextResponse.json({ order }, { status: 201 });
   } catch (err) {
