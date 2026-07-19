@@ -6,6 +6,18 @@ import { requireAdmin } from "@/lib/middleware/requireAdmin";
 import { logAdminAction, getClientIp } from "@/lib/middleware/logAdminAction";
 import { getSiteSettings } from "@/lib/site-settings";
 
+/**
+ * Force this route to run on the server for EVERY request.
+ *
+ * Without this, Next.js statically pre-renders the GET at build time (it has no
+ * request-specific input and getSiteSettings() never throws), which turns the
+ * whole /api/settings route into a static, GET-only asset. In production that
+ * makes PUT return 405 Method Not Allowed — even though it works in `next dev`,
+ * which doesn't statically optimize. Keeping it dynamic guarantees PUT/GET both
+ * hit a live server function.
+ */
+export const dynamic = "force-dynamic";
+
 // Public — the storefront reads branding/nav/footer/etc. from here. It's all
 // content meant to be shown to visitors anyway, so there's nothing sensitive.
 export async function GET() {
