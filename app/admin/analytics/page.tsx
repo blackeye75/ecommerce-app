@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { IndianRupee, ShoppingBag, Users, Package, Star, AlertTriangle } from "lucide-react";
+import { IndianRupee, ShoppingBag, Users, Package, Star, AlertTriangle, Wallet, CircleDollarSign, DollarSign, CurrencyIcon } from "lucide-react";
 import { AnalyticsSkeleton } from "@/components/ui/Skeleton";
+import { useCurrency } from "@/lib/useCurrency";
 
 interface Analytics {
   kpis: {
@@ -59,6 +60,7 @@ function Kpi({
 export default function AdminAnalyticsPage() {
   const [data, setData] = useState<Analytics | null>(null);
   const [error, setError] = useState("");
+  const { symbol: currency } = useCurrency();
 
   useEffect(() => {
     fetch("/api/admin/analytics")
@@ -74,14 +76,14 @@ export default function AdminAnalyticsPage() {
   const maxRevenue = Math.max(1, ...dailySeries.map((d) => d.revenue));
   const maxUnits = Math.max(1, ...topProducts.map((p) => p.units));
   const statusTotal = Math.max(1, Object.values(ordersByStatus).reduce((a, b) => a + b, 0));
-
+  // console.log(dailySeries)
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">Analytics</h1>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Kpi icon={<IndianRupee size={14} />} label="Revenue (paid)" value={`₹${kpis.revenue.toLocaleString("en-IN")}`} />
+        <Kpi icon={<Wallet size={14} />} label="Revenue (paid)" value={`${currency}${kpis.revenue.toLocaleString("en-IN")}`} />
         <Kpi icon={<ShoppingBag size={14} />} label="Total orders" value={kpis.totalOrders} />
         <Kpi icon={<ShoppingBag size={14} />} label="Paid orders" value={kpis.paidOrders} />
         <Kpi icon={<Users size={14} />} label="Customers" value={kpis.customers} />
@@ -97,13 +99,16 @@ export default function AdminAnalyticsPage() {
         ) : (
           <div className="flex items-end gap-1 h-40">
             {dailySeries.map((d) => (
-              <div key={d.date} className="flex-1 group relative flex flex-col justify-end">
+              <div key={d.date} className="flex-1 h-full group relative flex flex-col justify-end">
                 <div
                   className="bg-primary/80 rounded-t hover:bg-primary transition-colors"
-                  style={{ height: `${(d.revenue / maxRevenue) * 100}%` }}
+                  style={{
+                    height: `${(d.revenue / maxRevenue) * 100}%`,
+                    minHeight: d.revenue > 0 ? 2 : 0,
+                  }}
                 />
                 <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-black text-white text-[10px] rounded px-1.5 py-0.5 z-10">
-                  {d.date.slice(5)}: ₹{d.revenue.toLocaleString("en-IN")}
+                  {d.date.slice(5)}: {currency}{d.revenue.toLocaleString("en-IN")}
                 </div>
               </div>
             ))}
@@ -195,7 +200,7 @@ export default function AdminAnalyticsPage() {
                     <p className="text-gray-400 text-xs">{new Date(o.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">₹{o.total}</p>
+                    <p className="font-semibold">{currency}{o.total}</p>
                     <p className="text-gray-400 text-xs capitalize">{o.orderStatus}</p>
                   </div>
                 </li>

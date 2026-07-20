@@ -11,10 +11,12 @@ import {
   BarChart3,
   ScrollText,
   ArrowRight,
+  Wallet,
 } from "lucide-react";
 import { getServerUser } from "@/lib/middleware/getServerUser";
 import { connectDB } from "@/lib/db";
 import { Order, Product, User, Review } from "@/models";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -123,7 +125,12 @@ function StatCard({
 }
 
 export default async function AdminDashboard() {
-  const [user, stats] = await Promise.all([getServerUser(), getStats()]);
+  const [user, stats, settings] = await Promise.all([
+    getServerUser(),
+    getStats(),
+    getSiteSettings(),
+  ]);
+  const currency = settings.commerce.currencySymbol;
   const firstName = user?.email?.split("@")[0] ?? "Admin";
 
   const quickLinks = [
@@ -182,10 +189,16 @@ export default async function AdminDashboard() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard
-          icon={<IndianRupee size={14} />}
+        {/* <StatCard
+          icon={<Wallet size={14} />}
           label="Revenue (paid)"
           value={`\u20B9${stats.revenue.toLocaleString("en-IN")}`}
+          accent="text-green-500"
+        /> */}
+        <StatCard
+          icon={<Wallet size={14} />}
+          label="Revenue (paid)"
+          value={`${currency}${stats.revenue.toLocaleString("en-IN")}`}
           accent="text-green-500"
         />
         <StatCard icon={<ShoppingBag size={14} />} label="Orders" value={stats.totalOrders} href="/admin/orders" />
@@ -223,13 +236,12 @@ export default async function AdminDashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span
-                      className={`text-[11px] px-2 py-0.5 rounded-full capitalize ${
-                        STATUS_COLORS[o.orderStatus] ?? "bg-gray-100"
-                      }`}
+                      className={`text-[11px] px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[o.orderStatus] ?? "bg-gray-100"
+                        }`}
                     >
                       {o.orderStatus}
                     </span>
-                    <span className="text-sm font-semibold w-16 text-right">\u20B9{o.total}</span>
+                    <span className="text-sm font-semibold w-16 text-right">{currency}{o.total}</span>
                   </div>
                 </li>
               ))}

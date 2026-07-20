@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { CardListSkeleton } from "@/components/ui/Skeleton";
+import { useCurrency } from "@/lib/useCurrency";
+import { symbol } from "zod/v4";
+
 
 interface OrderItem {
   title: string;
@@ -36,6 +39,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const { symbol: currency } = useCurrency();
 
   async function loadOrders() {
     setLoading(true);
@@ -100,7 +104,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="text-right">
-                  <p className="font-bold">₹{order.total}</p>
+                  <p className="font-bold">{currency}{order.total}</p>
                   <p className="text-gray-400 text-xs">
                     {order.paymentMethod === "razorpay" ? "Razorpay" : "COD"}
                   </p>
