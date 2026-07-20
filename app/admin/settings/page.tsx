@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, ArrowUp, ArrowDown, Save } from "lucide-react";
 import { SingleImageUpload } from "@/components/admin/SingleImageUpload";
 import type { SiteSettingsData } from "@/lib/site-settings";
+import { CardListSkeleton } from "@/components/ui/Skeleton";
 
 /* ------------------------------------------------------------------ *
  * Immutable nested-path helpers
@@ -320,7 +321,7 @@ export default function AdminSettingsPage() {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6">Site Settings</h1>
-        <p className="text-gray-400 text-sm">Loading…</p>
+        <p className="text-gray-400 text-sm"><CardListSkeleton count={5} key={5} /></p>
       </div>
     );
   }

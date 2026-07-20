@@ -18,9 +18,11 @@ export default function AdminCategoriesPage() {
   const [error, setError] = useState("");
 
   async function loadCategories() {
+    setLoading(true)
     const res = await fetch("/api/categories");
     const data = await res.json();
     setCategories(data.categories ?? []);
+    setLoading(false)
   }
 
   useEffect(() => {
