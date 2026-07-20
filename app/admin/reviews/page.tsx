@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Star, Trash2, Eye, EyeOff } from "lucide-react";
+import { CardListSkeleton } from "@/components/ui/Skeleton";
 
 interface Review {
   _id: string;
@@ -79,7 +80,7 @@ export default function AdminReviewsPage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Loading…</p>
+        <CardListSkeleton count={5} />
       ) : reviews.length === 0 ? (
         <p className="text-gray-400">No reviews found.</p>
       ) : (

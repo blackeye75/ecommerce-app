@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 
 interface AuditLogEntry {
   _id: string;
@@ -28,7 +29,7 @@ export default function ActivityLogPage() {
       <h1 className="text-2xl font-bold mb-6">Activity Log</h1>
 
       {loading ? (
-        <p className="text-gray-400">Loading...</p>
+        <ListSkeleton rows={8} />
       ) : logs.length === 0 ? (
         <p className="text-gray-400">No activity recorded yet.</p>
       ) : (

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, X } from "lucide-react";
 import { useWishlistStore } from "@/store/useWishlistStore";
+import { ProductGridSkeleton } from "@/components/ui/Skeleton";
 
 interface WishlistProduct {
   _id: string;
@@ -64,7 +65,7 @@ export default function WishlistPage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Loading…</p>
+        <ProductGridSkeleton count={8} />
       ) : unauthorized ? (
         <p className="text-gray-500">
           Please{" "}

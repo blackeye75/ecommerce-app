@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { Product, Category } from "@/models";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { getSiteSettings } from "@/lib/site-settings";
 import { InferSchemaType } from "mongoose";
 import { ICategory } from "@/models/Category";
 
@@ -19,6 +20,8 @@ export const dynamic = "force-dynamic";
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   await connectDB();
+  const { commerce } = await getSiteSettings();
+  const currency = commerce.currencySymbol;
 
   const category = await Category.findOne({ slug: params.slug, isActive: true }).lean<ICategory>();
   if (!category) notFound();
@@ -48,7 +51,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {products.map((p) => (
-              <ProductCard key={String(p._id)} product={JSON.parse(JSON.stringify(p))} />
+              <ProductCard key={String(p._id)} product={JSON.parse(JSON.stringify(p))} currency={currency} />
             ))}
           </div>
 
@@ -58,9 +61,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                 <a
                   key={n}
                   href={`/category/${params.slug}?page=${n}`}
-                  className={`px-3 py-1 rounded-md border text-sm ${
-                    n === page ? "bg-primary text-primary-foreground" : ""
-                  }`}
+                  className={`px-3 py-1 rounded-md border text-sm ${n === page ? "bg-primary text-primary-foreground" : ""
+                    }`}
                 >
                   {n}
                 </a>

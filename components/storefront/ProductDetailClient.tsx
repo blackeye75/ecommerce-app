@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
+import { useCurrency } from "@/lib/useCurrency";
 import { WishlistButton } from "./WishlistButton";
 
 interface VariantAttribute {
@@ -36,6 +37,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const hasVariants = product.variants.length > 0;
+  const { symbol: currency } = useCurrency();
 
   const [selected, setSelected] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
@@ -108,9 +110,8 @@ export function ProductDetailClient({ product }: { product: Product }) {
               <button
                 key={img + i}
                 onClick={() => setActiveImage(i)}
-                className={`w-16 h-16 rounded-md overflow-hidden border-2 ${
-                  i === activeImage ? "border-primary" : "border-transparent"
-                }`}
+                className={`w-16 h-16 rounded-md overflow-hidden border-2 ${i === activeImage ? "border-primary" : "border-transparent"
+                  }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -127,9 +128,9 @@ export function ProductDetailClient({ product }: { product: Product }) {
         <h1 className="text-2xl font-bold mb-3">{product.title}</h1>
 
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-2xl font-semibold">₹{displayPrice}</span>
+          <span className="text-2xl font-semibold">{currency}{displayPrice}</span>
           {isDiscounted && (
-            <span className="text-gray-400 line-through">₹{product.price}</span>
+            <span className="text-gray-400 line-through">{currency}{product.price}</span>
           )}
         </div>
 
@@ -142,11 +143,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
                   <button
                     key={opt}
                     onClick={() => setSelected((prev) => ({ ...prev, [v.name]: opt }))}
-                    className={`px-3 py-1.5 rounded-md border text-sm ${
-                      selected[v.name] === opt
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "hover:border-gray-400"
-                    }`}
+                    className={`px-3 py-1.5 rounded-md border text-sm ${selected[v.name] === opt
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "hover:border-gray-400"
+                      }`}
                   >
                     {opt}
                   </button>

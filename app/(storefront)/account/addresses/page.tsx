@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 import { AddressForm } from "@/components/storefront/AddressForm";
 
 interface Address {
@@ -52,7 +53,7 @@ export default function AddressesPage() {
       <h1 className="text-2xl font-bold mb-6">My Addresses</h1>
 
       {loading ? (
-        <p className="text-gray-400">Loading...</p>
+        <ListSkeleton rows={3} />
       ) : (
         <div className="space-y-3 mb-6">
           {addresses.map((addr) => (

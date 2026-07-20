@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { IndianRupee, ShoppingBag, Users, Package, Star, AlertTriangle } from "lucide-react";
+import { AnalyticsSkeleton } from "@/components/ui/Skeleton";
 
 interface Analytics {
   kpis: {
@@ -67,7 +68,7 @@ export default function AdminAnalyticsPage() {
   }, []);
 
   if (error) return <p className="text-red-600">{error}</p>;
-  if (!data) return <p className="text-gray-400">Loading analytics…</p>;
+  if (!data) return <AnalyticsSkeleton />;
 
   const { kpis, ordersByStatus, dailySeries, topProducts, lowStock, recentOrders } = data;
   const maxRevenue = Math.max(1, ...dailySeries.map((d) => d.revenue));

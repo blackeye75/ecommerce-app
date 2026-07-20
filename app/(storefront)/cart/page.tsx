@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
+import { useCurrency } from "@/lib/useCurrency";
 
 export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
+  const { symbol: currency } = useCurrency();
 
   useEffect(() => setMounted(true), []);
 
@@ -55,7 +57,7 @@ export default function CartPage() {
                     .join(", ")}
                 </p>
               )}
-              <p className="text-sm mt-1">₹{item.price}</p>
+              <p className="text-sm mt-1">{currency}{item.price}</p>
 
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center border rounded-md">
@@ -87,14 +89,14 @@ export default function CartPage() {
               </div>
             </div>
 
-            <div className="text-right font-medium">₹{item.price * item.quantity}</div>
+            <div className="text-right font-medium">{currency}{item.price * item.quantity}</div>
           </div>
         ))}
       </div>
 
       <div className="mt-8 border-t pt-6 flex items-center justify-between">
         <span className="text-lg font-medium">Subtotal</span>
-        <span className="text-lg font-bold">₹{subtotal}</span>
+        <span className="text-lg font-bold">{currency}{subtotal}</span>
       </div>
       <p className="text-xs text-gray-400 text-right">Shipping and discounts calculated at checkout</p>
 

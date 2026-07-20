@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
+import { TableSkeleton } from "@/components/ui/Skeleton";
 
 interface Product {
   _id: string;
@@ -49,7 +50,7 @@ export default function AdminProductsPage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Loading...</p>
+        <TableSkeleton rows={6} cols={5} />
       ) : (
         <table className="w-full text-sm border">
           <thead>
@@ -73,11 +74,10 @@ export default function AdminProductsPage() {
                 </td>
                 <td className="p-2">
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      p.isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+                    className={`text-xs px-2 py-1 rounded-full ${p.isActive
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-500"
+                      }`}
                   >
                     {p.isActive ? "Active" : "Inactive"}
                   </span>

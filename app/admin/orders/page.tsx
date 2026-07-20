@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardListSkeleton } from "@/components/ui/Skeleton";
 
 interface OrderItem {
   title: string;
@@ -81,7 +82,7 @@ export default function AdminOrdersPage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Loading...</p>
+        <CardListSkeleton count={5} />
       ) : orders.length === 0 ? (
         <p className="text-gray-400">No orders yet.</p>
       ) : (

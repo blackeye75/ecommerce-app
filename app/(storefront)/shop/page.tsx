@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { Product, Category } from "@/models";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { ShopFilters } from "@/components/storefront/ShopFilters";
+import { getSiteSettings } from "@/lib/site-settings";
 
 interface ShopPageProps {
   searchParams: {
@@ -18,6 +19,8 @@ export const dynamic = "force-dynamic";
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   await connectDB();
+  const { commerce } = await getSiteSettings();
+  const currency = commerce.currencySymbol;
 
   const page = Math.max(1, Number(searchParams.page ?? 1));
   const filter: Record<string, unknown> = { isActive: true };
@@ -76,7 +79,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
             {products.map((p) => (
-              <ProductCard key={String(p._id)} product={JSON.parse(JSON.stringify(p))} />
+              <ProductCard key={String(p._id)} product={JSON.parse(JSON.stringify(p))} currency={currency} />
             ))}
           </div>
 
@@ -86,9 +89,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
                 <a
                   key={n}
                   href={buildPageUrl(n)}
-                  className={`px-3 py-1 rounded-md border text-sm ${
-                    n === page ? "bg-primary text-primary-foreground" : ""
-                  }`}
+                  className={`px-3 py-1 rounded-md border text-sm ${n === page ? "bg-primary text-primary-foreground" : ""
+                    }`}
                 >
                   {n}
                 </a>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { TableSkeleton } from "@/components/ui/Skeleton";
 
 interface Category {
   _id: string;
@@ -92,45 +93,47 @@ export default function AdminCategoriesPage() {
         </button>
       </form>
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
-
-      <table className="w-full text-sm border">
-        <thead>
-          <tr className="bg-gray-50 text-left">
-            <th className="p-2 border-b">Name</th>
-            <th className="p-2 border-b">Slug</th>
-            <th className="p-2 border-b">Status</th>
-            <th className="p-2 border-b"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((cat) => (
-            <tr key={cat._id} className="border-b">
-              <td className="p-2">{cat.name}</td>
-              <td className="p-2 text-gray-500">{cat.slug}</td>
-              <td className="p-2">
-                <button
-                  onClick={() => toggleActive(cat)}
-                  className={`text-xs px-2 py-1 rounded-full ${
-                    cat.isActive
+      {loading ? (
+        <TableSkeleton rows={6} cols={5} />
+      ) : (
+        <table className="w-full text-sm border">
+          <thead>
+            <tr className="bg-gray-50 text-left">
+              <th className="p-2 border-b">Name</th>
+              <th className="p-2 border-b">Slug</th>
+              <th className="p-2 border-b">Status</th>
+              <th className="p-2 border-b"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((cat) => (
+              <tr key={cat._id} className="border-b">
+                <td className="p-2">{cat.name}</td>
+                <td className="p-2 text-gray-500">{cat.slug}</td>
+                <td className="p-2">
+                  <button
+                    onClick={() => toggleActive(cat)}
+                    className={`text-xs px-2 py-1 rounded-full ${cat.isActive
                       ? "bg-green-100 text-green-700"
                       : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {cat.isActive ? "Active" : "Inactive"}
-                </button>
-              </td>
-              <td className="p-2 text-right">
-                <button
-                  onClick={() => handleDelete(cat._id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                      }`}
+                  >
+                    {cat.isActive ? "Active" : "Inactive"}
+                  </button>
+                </td>
+                <td className="p-2 text-right">
+                  <button
+                    onClick={() => handleDelete(cat._id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
