@@ -12,6 +12,7 @@ import {
   ScrollText,
   ArrowRight,
   Wallet,
+  Ticket,
 } from "lucide-react";
 import { getServerUser } from "@/lib/middleware/getServerUser";
 import { connectDB } from "@/lib/db";
@@ -136,6 +137,7 @@ export default async function AdminDashboard() {
   const quickLinks = [
     { href: "/admin/products", label: "Products", icon: <Package size={18} /> },
     { href: "/admin/categories", label: "Categories", icon: <FolderTree size={18} /> },
+    { href: "/admin/coupons", label: "Coupons", icon: <Ticket size={18} /> },
     { href: "/admin/orders", label: "Orders", icon: <ShoppingBag size={18} /> },
     { href: "/admin/reviews", label: "Reviews", icon: <Star size={18} /> },
     { href: "/admin/analytics", label: "Analytics", icon: <BarChart3 size={18} /> },

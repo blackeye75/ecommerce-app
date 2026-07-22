@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import { AddressForm } from "@/components/storefront/AddressForm";
+import { AvailableCoupons } from "@/components/storefront/AvailableCoupons";
 
 interface Address {
   _id: string;
@@ -102,7 +103,7 @@ export default function CheckoutPage() {
           if (c.codEnabled && !c.razorpayEnabled) setPaymentMethod("cod");
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -114,16 +115,17 @@ export default function CheckoutPage() {
     subtotal - discount >= commerce.freeShippingThreshold ? 0 : commerce.shippingFee;
   const total = Math.max(0, subtotal - discount + shippingFee);
 
-  async function handleApplyCoupon() {
+  async function handleApplyCoupon(codeArg?: string) {
     setCouponError("");
-    if (!couponInput.trim()) return;
+    const code = (codeArg ?? couponInput).trim();
+    if (!code) return;
+    setCouponInput(code); // reflect one-tap selections in the input
     setCouponLoading(true);
-
     try {
       const res = await fetch("/api/coupons/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponInput.trim(), subtotal }),
+        body: JSON.stringify({ code, subtotal }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -248,7 +250,7 @@ export default function CheckoutPage() {
             if (!verifyRes.ok) {
               setOrderError(
                 verifyData.error ||
-                  "Payment verification failed. If money was deducted, please contact support."
+                "Payment verification failed. If money was deducted, please contact support."
               );
               setPlacing(false);
               return;
@@ -306,9 +308,8 @@ export default function CheckoutPage() {
               {addresses.map((addr) => (
                 <label
                   key={addr._id}
-                  className={`block border rounded-md p-3 text-sm cursor-pointer ${
-                    selectedAddressId === addr._id ? "border-primary" : ""
-                  }`}
+                  className={`block border rounded-md p-3 text-sm cursor-pointer ${selectedAddressId === addr._id ? "border-primary" : ""
+                    }`}
                 >
                   <input
                     type="radio"
@@ -354,9 +355,8 @@ export default function CheckoutPage() {
           <div className="space-y-2 text-sm">
             {commerce.codEnabled && (
               <label
-                className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
-                  paymentMethod === "cod" ? "border-primary" : ""
-                }`}
+                className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${paymentMethod === "cod" ? "border-primary" : ""
+                  }`}
               >
                 <input
                   type="radio"
@@ -369,9 +369,8 @@ export default function CheckoutPage() {
             )}
             {commerce.razorpayEnabled && (
               <label
-                className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${
-                  paymentMethod === "razorpay" ? "border-primary" : ""
-                }`}
+                className={`flex items-center gap-2 border rounded-md p-3 cursor-pointer ${paymentMethod === "razorpay" ? "border-primary" : ""
+                  }`}
               >
                 <input
                   type="radio"
@@ -424,8 +423,8 @@ export default function CheckoutPage() {
                 onChange={(e) => setCouponInput(e.target.value)}
                 className="flex-1 rounded-md border px-3 py-2 text-sm"
               />
-              <button
-                onClick={handleApplyCoupon}
+            <button
+                onClick={() => handleApplyCoupon()}
                 disabled={couponLoading}
                 className="rounded-md border px-3 py-2 text-sm disabled:opacity-50"
               >
@@ -434,6 +433,12 @@ export default function CheckoutPage() {
             </div>
           )}
           {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
+
+          <AvailableCoupons
+            subtotal={subtotal}
+            appliedCode={couponCode}
+            onApply={(c) => handleApplyCoupon(c)}
+          />
         </div>
 
         <div className="border-t pt-4 space-y-1 text-sm">

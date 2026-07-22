@@ -30,6 +30,9 @@ export default async function AdminLayout({
             <a href="/admin/categories" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
               Categories
             </a>
+            <a href="/admin/coupons" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
+              Coupons
+            </a>
             <a href="/admin/orders" className="block px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white rounded-xl">
               Orders
             </a>

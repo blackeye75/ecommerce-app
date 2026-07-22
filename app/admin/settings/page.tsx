@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, ArrowUp, ArrowDown, Save } from "lucide-react";
 import { SingleImageUpload } from "@/components/admin/SingleImageUpload";
 import type { SiteSettingsData } from "@/lib/site-settings";
-import { CardListSkeleton } from "@/components/ui/Skeleton";
+import { CardListSkeleton, Skeleton } from "@/components/ui/Skeleton";
 
 /* ------------------------------------------------------------------ *
  * Immutable nested-path helpers
@@ -127,15 +127,13 @@ function Toggle({
       <button
         type="button"
         onClick={() => onChange(!value)}
-        className={`shrink-0 w-11 h-6 rounded-full transition relative ${
-          value ? "bg-primary" : "bg-gray-300"
-        }`}
+        className={`shrink-0 w-11 h-6 rounded-full transition relative ${value ? "bg-primary" : "bg-gray-300"
+          }`}
         aria-pressed={value}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-            value ? "left-[22px]" : "left-0.5"
-          }`}
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${value ? "left-[22px]" : "left-0.5"
+            }`}
         />
       </button>
     </div>
@@ -319,9 +317,18 @@ export default function AdminSettingsPage() {
 
   if (!settings) {
     return (
-      <div>
-        <h1 className="text-2xl font-bold mb-6">Site Settings</h1>
-        <p className="text-gray-400 text-sm"><CardListSkeleton count={5} key={5} /></p>
+      // <div>
+      //   <h1 className="text-2xl font-bold mb-6">Site Settings</h1>
+      //   <p className="text-gray-400 text-sm"><CardListSkeleton count={5} key={5} /></p>
+      // </div>
+      <div className="max-w-3xl space-y-4">
+        <Skeleton className="h-8 w-40" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="space-y-1.5">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
       </div>
     );
   }
@@ -348,11 +355,10 @@ export default function AdminSettingsPage() {
 
       {message && (
         <p
-          className={`mb-4 text-sm rounded-md px-3 py-2 ${
-            message.type === "ok"
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-600"
-          }`}
+          className={`mb-4 text-sm rounded-md px-3 py-2 ${message.type === "ok"
+            ? "bg-green-50 text-green-700"
+            : "bg-red-50 text-red-600"
+            }`}
         >
           {message.text}
         </p>
@@ -364,11 +370,10 @@ export default function AdminSettingsPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-3 py-2 text-sm border-b-2 -mb-px ${
-              tab === t
-                ? "border-primary font-medium"
-                : "border-transparent text-gray-500 hover:text-gray-800"
-            }`}
+            className={`px-3 py-2 text-sm border-b-2 -mb-px ${tab === t
+              ? "border-primary font-medium"
+              : "border-transparent text-gray-500 hover:text-gray-800"
+              }`}
           >
             {t}
           </button>
